@@ -19,7 +19,7 @@
 
 ## 📢 News
 
-- *Febuary 13th, 2025*: We just released **Agentless-Lite** 1.0! **Agentless-Lite** is the top-performing RAG-only scaffold for SWE-bench with a 
+- *Febuary 13th, 2025*: We just released **Agentless-Lite** 1.0! **Agentless-Lite** is the top-performing RAG-only scaffold for SWE-bench increasing RAG performance on the lite subset from 4.33% to 32.33%!
 
 ## 💡 About
 
@@ -84,10 +84,18 @@ python agentless_lite/repair.py \
         --backend openai \
         --num_threads 16 \
         --max_retries 10 \
-        --max_files 10
+        --max_files 5
 ```
 
 This command will iteratively prompt the model (gradually increasing the temperature) until a valid patch is produced or the `--max_retries` is reached. It will produce `all_preds.jsonl` that contains the generated patch for each instance_id which you can then directly evaluate with your favorite SWE-bench evaluation method!
+
+> [!TIP]
+>
+> We currently support OpenRouter, OpenAI, and DeepSeek models. Additionally we support batch submission for compatible OpenAI models. You can change which of these backends to use via the `--backend` parameter (open_router, openai, openai_batch_offline or deepseek)
+>
+> For example `--backend deepseek`
+
+This commands generates up to 10 samples as defined `--max_retries 10`. The patches are saved in `results/all_preds.jsonl`. The complete logs are also saved in `results/repair/logs`
 
 ## 🐈 Localization
 
@@ -121,37 +129,6 @@ This will split files in the repositories into small chunks for embedding. `--fi
 > [!TIP]
 >
 > We use multiple threads (controllable via `--num-threads`) to speed up the Agentless process
-
-## 🧶 Repair
-
-Using the retrieved contexts from the previous step, we now perform repair.
-
-Unlike **Agentless**, **Agentless Lite** generates samples one at a time until a sample successfully passes syntax checks. Instead of performing subsequent selection, this patch is simply taken as the final patch.
-
-Run the following command to generate the patches:
-
-```shell
-python agentless_lite/repair.py \
-        --base_path agentless_lite \
-        --output_folder results \
-        --loc_file results/retrieval.jsonl \
-        --temp 0 \
-        --model o3-mini \
-        --max_completion_tokens 78000 \
-        --max_input_tokens 118000 \
-        --backend openai \
-        --num_threads 16 \
-        --max_retries 10 \
-        --max_files 10
-```
-
-> [!TIP]
->
-> We currently support OpenRouter, OpenAI, and DeepSeek models. Additionally we support batch submission for compatible OpenAI models. You can change which of these backends to use via the `--backend` parameter (open_router, openai, openai_batch_offline or deepseek)
->
-> For example `--backend deepseek`
-
-This commands generates up to 10 samples as defined `--max_retries 10`. The patches are saved in `results/all_preds.jsonl`. The complete logs are also saved in `results/repair/logs`
 
 ## 🐈‍⬛ Artifacts
 
