@@ -7,17 +7,19 @@
 
 <p align="center">
     <big><a href="#-news">📢News</a></big> |
-    <big><a href="#-setup">⚙️Setup</a></big> |
-    <big><a href="#-setup">🛠️Setup</a></big> |
-    <big><a href="#-comparison">📊Comparison</a></big> | 
-    <big><a href="#-artifacts">📦Artifacts</a></big> |
-    <big><a href="#-citation">📝Citation</a></big> |
-    <big><a href="#-acknowledgement">🙏Acknowledgement</a></big>
+    <big><a href="#-about">💡About</a></big> |
+    <big><a href="#-setup">🐈Setup</a></big> |
+    <big><a href="#-quickstart">⚡Quickstart</a></big> |
+    <big><a href="#-localization">🐈Localization</a></big> |
+    <big><a href="#-repair">🧶Repair</a></big> |
+    <big><a href="#-comparison">🧶Comparison</a></big> |
+    <big><a href="#-artifacts">🐈‍⬛Artifacts</a></big> |
+    <big><a href="#-acknowledgement">😻Acknowledgement</a></big>
 </p>
 
 ## 📢 News
 
-INSERT NEWS HERE
+- *Febuary 13th, 2025*: We just released **Agentless-Lite** 1.0! **Agentless-Lite** is the top-performing RAG-only scaffold for SWE-bench with a 
 
 ## 💡 About
 
@@ -71,17 +73,18 @@ export WANDB_API_KEY={wandb_key_here}
 ### Run
 
 ```shell
-python agentless_lite/generate/quick_repair.py \
-    --output_file all_preds.jsonl \
-    --loc_file retrieval.jsonl \
-    --model gpt-4o-mini \
-    --max_completion_tokens 2048 \
-    --max_input_tokens 120000 \
-    --backend openai \
-    --num_threads 12 \
-    --max_retries 20 \
-    --max_files 5 \
-    --enable_weave
+python agentless_lite/repair.py \
+        --base_path agentless_lite \
+        --output_folder results \
+        --loc_file results/retrieval.jsonl \
+        --temp 0 \
+        --model gpt-4o-mini \
+        --max_completion_tokens 78000 \
+        --max_input_tokens 118000 \
+        --backend openai \
+        --num_threads 8 \
+        --max_retries 10 \
+        --max_files 5
 ```
 
 This command will iteratively prompt the model until a valid patch is produced or the `--max_retries` is reached. It will produce `all_preds.jsonl` that contains the generated patch for each instance_id which you can then directly evaluate with your favorite SWE-bench evaluation method!
@@ -134,11 +137,11 @@ python agentless_lite/repair.py \
         --loc_file results/retrieval.jsonl \
         --temp 0 \
         --model o3-mini \
-        --max_completion_tokens 100000 \
-        --max_input_tokens 120000 \
+        --max_completion_tokens 78000 \
+        --max_input_tokens 118000 \
         --backend openai \
         --num_threads 8 \
-        --max_retries 20 \
+        --max_retries 10 \
         --max_files 5
 ```
 
@@ -148,7 +151,7 @@ python agentless_lite/repair.py \
 >
 > For example `--backend deepseek`
 
-This commands generates up to 20 samples as defined `--num_gen 20`. The patches are saved in `results/repair/output.jsonl`, which contains the raw output of each sample as well as any generation information (e.g., number of tokens). The complete logs are also saved in `results/repair/logs`
+This commands generates up to 10 samples as defined `--max_retries 10`. The patches are saved in `results/all_preds.jsonl`. The complete logs are also saved in `results/repair/logs`
 
 ## 🧶 Comparison
 
@@ -160,7 +163,7 @@ Below shows the comparison graph between **Agentless Lite**, **Agentless Lite Mi
 
 ## 🐈‍⬛ Artifacts
 
-You can download the complete artifacts of **Agentless Lite** in our [v1.0.0 release](https://github.com/OpenAutoCoder/Agentless/releases/tag/v1.0.0):
+You can download the complete artifacts of **Agentless Lite** in our [v0.1.0 release](https://github.com/sorendunn/Agentless-Lite/releases/tag/v0.1.0):
 
 - 🐈‍⬛ agentless_swebench_lite: complete Agentless Lite run on SWE-bench Lite for r1
 - 🐈‍⬛ swebench_repo_lite_voyage: top 100 retreived files for Voyage-Code-3 on SWE-bench Lite
