@@ -9,9 +9,9 @@
     <big><a href="#-news">📢News</a></big> |
     <big><a href="#-about">💡About</a></big> |
     <big><a href="#-setup">🐈Setup</a></big> |
-    <big><a href="#-quickstart">⚡Quickstart</a></big> |
-    <big><a href="#-localization">🐈Localization</a></big> |
-    <big><a href="#-repair">🧶Repair</a></big> |
+    <big><a href="#-quickstart">⚡Quickstart</a></big>
+</p>
+<p align="center">
     <big><a href="#-comparison">🧶Comparison</a></big> |
     <big><a href="#-artifacts">🐈‍⬛Artifacts</a></big> |
     <big><a href="#-acknowledgement">😻Acknowledgement</a></big>
@@ -27,7 +27,7 @@
     <big>Check out the original Agentless implementation here: <a href="https://github.com/OpenAutoCoder/Agentless">🚀 Agentless Repository</a></big>
 </p>
 
-*Agentless Lite* is a generalized, lightweight adaptation of the [Agentless](https://github.com/OpenAutoCoder/Agentless) framework for solving software development issues. Specifically, *Agentless Lite* performs the following steps:
+**Agentless Lite** is a generalized, lightweight adaptation of the [Agentless](https://github.com/OpenAutoCoder/Agentless) framework for solving software development issues. Specifically, **Agentless Lite** performs the following steps:
 
 1. Use an embedding model to retrieve relevant files from the repository
 2. Query the LLM to generate a repair based on the top 5 retrieved files, retrying the generation until the model outputs a valid patch.
@@ -66,7 +66,7 @@ export WANDB_API_KEY={wandb_key_here}
 
 ### Prerequisites
 
-1. Download and unzip the prepared retrieval contexts for SWE-Bench Lite [swe_bench_lite.zip](LINK_HERE) or [swe_bench_verified.zip](LINK_HERE)
+1. Download and unzip the prepared retrieval contexts for SWE-Bench Lite [swe_bench_lite.zip](LINK_HERE)
     - Alternatively, see `Localization` section for how to generate your own retrieval contexts
 2. Move the jsonl file to the main Agentless Lite directory (or specify the path with `--loc_file`)
 
@@ -76,18 +76,18 @@ export WANDB_API_KEY={wandb_key_here}
 python agentless_lite/repair.py \
         --base_path agentless_lite \
         --output_folder results \
-        --loc_file results/retrieval.jsonl \
+        --loc_file retrieval.jsonl \
         --temp 0 \
-        --model gpt-4o-mini \
+        --model o3-mini \
         --max_completion_tokens 78000 \
         --max_input_tokens 118000 \
         --backend openai \
-        --num_threads 8 \
+        --num_threads 16 \
         --max_retries 10 \
-        --max_files 5
+        --max_files 10
 ```
 
-This command will iteratively prompt the model until a valid patch is produced or the `--max_retries` is reached. It will produce `all_preds.jsonl` that contains the generated patch for each instance_id which you can then directly evaluate with your favorite SWE-bench evaluation method!
+This command will iteratively prompt the model (gradually increasing the temperature) until a valid patch is produced or the `--max_retries` is reached. It will produce `all_preds.jsonl` that contains the generated patch for each instance_id which you can then directly evaluate with your favorite SWE-bench evaluation method!
 
 ## 🐈 Localization
 
@@ -100,7 +100,7 @@ Create the embeddings and perform retrieval:
 ```shell
 python agentless_lite/retrieve_swe.py \
         --dataset princeton-nlp/SWE-bench_Lite \
-        --num_threads 16 \
+        --num_threads 1 \
         --output_folder results \
         --output_file retrieval.jsonl \
         --embedding_folder voyage_lite \
@@ -140,9 +140,9 @@ python agentless_lite/repair.py \
         --max_completion_tokens 78000 \
         --max_input_tokens 118000 \
         --backend openai \
-        --num_threads 8 \
+        --num_threads 16 \
         --max_retries 10 \
-        --max_files 5
+        --max_files 10
 ```
 
 > [!TIP]
@@ -153,21 +153,12 @@ python agentless_lite/repair.py \
 
 This commands generates up to 10 samples as defined `--max_retries 10`. The patches are saved in `results/all_preds.jsonl`. The complete logs are also saved in `results/repair/logs`
 
-## 🧶 Comparison
-
-Below shows the comparison graph between **Agentless Lite**, **Agentless Lite Mini**, and the full **Agentless**.
-
-<p align="center">
-<img src="./resources/comparison_graph.png" style="width:75%; margin-left: auto; margin-right: auto;">
-</p>
-
 ## 🐈‍⬛ Artifacts
 
 You can download the complete artifacts of **Agentless Lite** in our [v0.1.0 release](https://github.com/sorendunn/Agentless-Lite/releases/tag/v0.1.0):
 
-- 🐈‍⬛ agentless_swebench_lite: complete Agentless Lite run on SWE-bench Lite for r1
-- 🐈‍⬛ swebench_repo_lite_voyage: top 100 retreived files for Voyage-Code-3 on SWE-bench Lite
-- 🐈‍⬛ swebench_repo_lite_openai: top 100 retreived files for OpenAI-Embedding-3-Small on SWE-bench Lite
+- 🐈‍⬛ agentless_lite_run.zip: complete Agentless Lite run on SWE-bench Lite for o3-mini
+- 🐈‍⬛ agentless_lite_retrievals.zip: top retreived files for filtering + Voyage-Code-3 on SWE-bench Lite
 
 ## 😻 Acknowledgement
 
