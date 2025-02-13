@@ -2,7 +2,7 @@
 
 <p align="center">
     <a href="https://arxiv.org/abs/2407.01489"><img src="https://img.shields.io/badge/📑-Arxiv-b31b1b?style=for-the-badge"></a>
-    <a href="https://github.com/OpenAutoCoder/Agentless/blob/master/LICENSE"><img src="https://forthebadge.com/images/badges/license-mit.svg" style="height: 28px"></a>
+    <a href="https://github.com/sorendunn/Agentless-Lite/blob/master/LICENSE"><img src="https://forthebadge.com/images/badges/license-mit.svg" style="height: 28px"></a>
 </p>
 
 <p align="center">
@@ -12,14 +12,13 @@
     <big><a href="#-quickstart">⚡Quickstart</a></big>
 </p>
 <p align="center">
-    <big><a href="#-comparison">🧶Comparison</a></big> |
     <big><a href="#-artifacts">🐈‍⬛Artifacts</a></big> |
     <big><a href="#-acknowledgement">😻Acknowledgement</a></big>
 </p>
 
 ## 📢 News
 
-- *Febuary 13th, 2025*: We just released **Agentless-Lite** 1.0! **Agentless-Lite** is the top-performing RAG-only scaffold for SWE-bench increasing RAG performance on the lite subset from 4.33% to 32.33%!
+- *Febuary 13th, 2025*: We just released **Agentless-Lite** 1.0! **Agentless-Lite** is the top-performing RAG-only scaffold for SWE-bench, increasing RAG performance on the lite subset from 4.33% to 32.33% and costing only $0.21 per instance ($0.12 if using the prepared retrieval contexts)!
 
 ## 💡 About
 
@@ -38,7 +37,8 @@ Thats it! While simple this approach is competitive with SOTA agents and comes w
 - 💨 No required runtime environment
 - 🐍 No python specific language dependencies
 - ⚡ Simple, single-prompt inference
-- 🤝 Support for over 300 models through *OpenRouter*
+- 🤝 Support for over 300 models with *OpenRouter*
+- 💰 Costs less than $0.25 per instance
 
 ## 🐈 Setup
 
