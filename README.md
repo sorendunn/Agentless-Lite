@@ -8,7 +8,7 @@
 <p align="center">
     <big><a href="#-news">📢News</a></big> |
     <big><a href="#-about">💡About</a></big> |
-    <big><a href="#-setup">🐈Setup</a></big> |
+    <big><a href="#-setup">⚙️ Setup</a></big> |
     <big><a href="#-quickstart">⚡Quickstart</a></big>
 </p>
 <p align="center">
@@ -40,7 +40,7 @@ Thats it! While simple this approach is competitive with SOTA agents and comes w
 - 🤝 Support for over 300 models with *OpenRouter*
 - 💰 Costs less than $0.25 per instance
 
-## 🐈 Setup
+## ⚙️ Setup
 
 First create the environment
 
@@ -87,7 +87,7 @@ python agentless_lite/repair.py \
         --max_files 5
 ```
 
-This command will iteratively prompt the model (gradually increasing the temperature) until a valid patch is produced or the `--max_retries` is reached. It will produce `all_preds.jsonl` that contains the generated patch for each instance_id which you can then directly evaluate with your favorite SWE-bench evaluation method!
+This command will iteratively prompt the model (gradually increasing the temperature) until a valid patch is produced or the `--max_retries` is reached. The complete logs are also saved in `results/logs` It will produce `all_preds.jsonl` that contains the generated patch for each instance_id which you can then directly evaluate with your favorite SWE-bench evaluation method!
 
 > [!TIP]
 >
@@ -95,13 +95,7 @@ This command will iteratively prompt the model (gradually increasing the tempera
 >
 > For example `--backend deepseek`
 
-This commands generates up to 10 samples as defined `--max_retries 10`. The patches are saved in `results/all_preds.jsonl`. The complete logs are also saved in `results/repair/logs`
-
 ## 🐈 Localization
-
-> [!TIP]
->
-> To quickly start evaluating on SWE-bench see the `Quickstart` section above
 
 Create the embeddings and perform retrieval:
 
@@ -118,7 +112,7 @@ python agentless_lite/retrieve_swe.py \
         --entire_file
 ```
 
-This will split files in the repositories into small chunks for embedding. `--filter` specifies to only embed the non-test python files in the repository. `--entire-file` specifies to retrieve the entire file if any chunks within the file are retrieved. `--retrieve_num` indicates the number of chunks to retrieve.
+This will split files in the repositories into small chunks for embedding. `--filter_python` specifies to only embed the non-test python files in the repository. `--entire-file` specifies to retrieve the entire file if any chunks within the file are retrieved. `--retrieve_num` indicates the total number of chunks to retrieve.
 
 > [!TIP]
 >
@@ -134,8 +128,8 @@ This will split files in the repositories into small chunks for embedding. `--fi
 
 You can download the complete artifacts of **Agentless Lite** in our [v0.1.0 release](https://github.com/sorendunn/Agentless-Lite/releases/tag/v0.1.0):
 
-- 🐈‍⬛ agentless_lite_run.zip: complete Agentless Lite run on SWE-bench Lite for o3-mini
-- 🐈‍⬛ agentless_lite_retrievals.zip: top retreived files for filtering + Voyage-Code-3 on SWE-bench Lite
+- 🐈‍⬛ **agentless_lite_run.zip**: complete Agentless Lite run on SWE-bench Lite for o3-mini
+- 🐈‍⬛ **agentless_lite_retrievals.zip**: top retreived files for filtering + Voyage-Code-3 on SWE-bench Lite
 
 ## 😻 Acknowledgement
 
