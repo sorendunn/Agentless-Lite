@@ -1,0 +1,5 @@
+*.jsonl
+*.pyc
+*.json
+playground/*
+results*/*

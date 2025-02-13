@@ -1,0 +1,11 @@
+openai
+pre-commit
+datasets
+tiktoken
+jsonlines
+black
+llama-index
+llama-index-embeddings-voyageai
+gitpython
+pandas
+weave
