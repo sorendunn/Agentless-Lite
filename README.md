@@ -8,7 +8,7 @@
 <p align="center">
     <big><a href="#-news">📢News</a></big> |
     <big><a href="#-about">💡About</a></big> |
-    <big><a href="#-setup">⚙️ Setup</a></big> |
+    <big><a href="#-setup">⚙️Setup</a></big> |
     <big><a href="#-quickstart">⚡Quickstart</a></big>
 </p>
 <p align="center">
@@ -66,7 +66,7 @@ export WANDB_API_KEY={wandb_key_here}
 
 ### Prerequisites
 
-1. Download and unzip the prepared retrieval contexts for SWE-Bench Lite [swe_bench_lite.zip](https://github.com/sorendunn/Agentless-Lite/releases/download/v0.1.0/agentless_lite_retrievals.zip)
+1. Download and unzip the prepared retrieval contexts for SWE-Bench Lite [swe_bench_lite.zip](https://github.com/sorendunn/Agentless-Lite/releases/download/v0.1.0/agentless_lite_retrievals.zip) or SWE-Bench Verified [swe_bench_verified.zip](https://github.com/sorendunn/Agentless-Lite/releases/download/v0.1.0/agentless_verified_retrievals.zip)
     - Alternatively, see `Localization` section for how to generate your own retrieval contexts
 2. Move the jsonl file to the main Agentless Lite directory (or specify the path with `--loc_file`)
 
