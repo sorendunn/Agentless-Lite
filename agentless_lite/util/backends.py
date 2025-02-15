@@ -236,7 +236,7 @@ class BaseGenerator(CodeGenerator):
                             }
                             f.write(json.dumps(output) + "\n")
 
-                    return True
+                    return git_diff
 
                 temperature = min(1.0, temperature + 0.1)
             except Exception as e:

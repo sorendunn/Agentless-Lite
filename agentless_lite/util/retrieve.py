@@ -95,7 +95,7 @@ def create_new_index(files, embedding_model, save_dir, file_to_contents, logger)
 def retrieve(
     files,
     prompt,
-    embedding_model,
+    embedding_model_name,
     save_dir,
     filter_num,
     retrieve_num,
@@ -107,6 +107,8 @@ def retrieve(
 ):
 
     original_file_to_contents = file_to_contents
+
+    embedding_model = get_embedding_model(embedding_model_name, logger)
 
     if filter_model_name:
         filter_save_dir = save_dir + "_filter"

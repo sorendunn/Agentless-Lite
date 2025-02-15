@@ -15,7 +15,7 @@ from agentless_lite.util.repo import (
     ensure_repo_exists,
     get_all_file_paths,
 )
-from agentless_lite.util.retrieve import get_embedding_model, retrieve
+from agentless_lite.util.retrieve import retrieve
 
 RETRIEVAL_INSTRUCTION = (
     "\n\nFind code the code which need to be edited to solve the above issue"
@@ -31,8 +31,6 @@ def retrieve_instance(args, row, output_path, repo_locks, output_lock):
     logger.info(f"Starting retrieval for instance {row['instance_id']}")
 
     try:
-        retrieval_model = get_embedding_model(args.embedding_model, logger)
-
         original_prompt = row["problem_statement"]
         persist_dir = os.path.join(args.embedding_folder, row["instance_id"])
 
@@ -69,7 +67,7 @@ def retrieve_instance(args, row, output_path, repo_locks, output_lock):
         file_names, file_contents = retrieve(
             file_to_contents.keys() if file_to_contents else [],
             original_prompt + RETRIEVAL_INSTRUCTION,
-            retrieval_model,
+            args.embedding_model,
             persist_dir,
             args.filter_num,
             args.retrieve_num,

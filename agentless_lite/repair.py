@@ -9,7 +9,7 @@ import weave
 from agentless_lite.util.backends import get_generator
 from agentless_lite.util.repair import num_tokens_from_messages
 
-agentless_prompt = """
+AGENTLESS_PROMPT = """
 We are currently solving the following issue within our repository. Here is the issue text:
 --- BEGIN ISSUE ---
 {problem_statement}
@@ -48,7 +48,7 @@ Wrap the *SEARCH/REPLACE* edit in blocks ```python...```.
 
 
 def process_instance(instance, args, file_lock):
-    repair_prompt = agentless_prompt
+    repair_prompt = AGENTLESS_PROMPT
 
     formatted_files = ""
     for idx, file in enumerate(instance["found_files"]):
@@ -78,10 +78,10 @@ def process_instance(instance, args, file_lock):
     if not generator:
         raise ValueError(f"Unsupported backend: {args.backend}")
 
-    success = generator.generate_with_retries(
+    git_diff = generator.generate_with_retries(
         instance, prompt, args, file_lock, args.output_file
     )
-    if not success:
+    if not git_diff:
         print(
             f"Failed to generate valid response for {instance['instance_id']} after {args.max_retries} attempts"
         )
