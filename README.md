@@ -6,9 +6,9 @@
 </p>
 
 <p align="center">
-    <big><a href="#news">📢News</a></big> |
-    <big><a href="#about">💡About</a></big> |
-    <big><a href="#setup">⚙️Setup</a></big> |
+    <big><a href="#-news">📢News</a></big> |
+    <big><a href="#-about">💡About</a></big> |
+    <big><a href="#-setup">⚙️Setup</a></big> |
     <big><a href="#quickstart">⚡Quickstart</a></big>
 </p>
 <p align="center">
