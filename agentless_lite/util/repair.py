@@ -270,11 +270,9 @@ def fake_git_repo(repo_playground, file_paths, old_contents, new_contents) -> st
 def create_diff_from_response(
     response: str, old_contents: list, files: list
 ) -> Optional[str]:
-    extracted_python_blocks = extract_code_blocks(response)
+    extracted_blocks = extract_code_blocks(response)
     try:
-        edits = [
-            parse_edit_command(edit_command) for edit_command in extracted_python_blocks
-        ]
+        edits = [parse_edit_command(edit_command) for edit_command in extracted_blocks]
         new_contents, _ = apply_edit_commands(edits, old_contents, files, False, False)
         git_diff = fake_git_repo("playground", files, old_contents, new_contents)
         return git_diff if git_diff.strip() else None

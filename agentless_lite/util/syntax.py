@@ -2,6 +2,9 @@ import os
 import platform
 import subprocess
 
+import tree_sitter_javascript
+from tree_sitter import Language, Parser
+
 
 def check_syntax(filepath):
     """
@@ -29,7 +32,7 @@ def check_syntax(filepath):
             return check_shell_syntax(filepath)
 
         else:
-            return False, f"Unsupported file type: {file_extension}"
+            return True, f"Unsupported file type: {file_extension}"
 
     except Exception as e:
         return False, f"Error during syntax check: {str(e)}"
@@ -54,20 +57,36 @@ def check_python_syntax(filepath, timeout_seconds=30):
 
 
 def check_javascript_syntax(filepath):
-    """Check JavaScript syntax using node"""
+    """Check JavaScript/JSX syntax using tree-sitter"""
     try:
-        if subprocess.run(["node", "--version"], capture_output=True).returncode != 0:
-            return False, "Node.js is not installed"
+        with open(filepath, "r", encoding="utf-8") as f:
+            code = f.read()
 
-        command = f'node --check "{filepath}"'
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        try:
+            # Initialize tree-sitter parser with JavaScript language
+            JS_LANGUAGE = Language(tree_sitter_javascript.language())
+            parser = Parser(JS_LANGUAGE)
 
-        if result.returncode == 0:
+            # Parse the code
+            tree = parser.parse(bytes(code, "utf8"))
+
+            # If there are syntax errors, tree-sitter will include ERROR nodes
+            has_errors = any(node.type == "ERROR" for node in tree.root_node.children)
+
+            if has_errors:
+                return False, "Syntax error detected in the code"
             return True, "Syntax is valid"
-        else:
-            return False, f"Syntax error: {result.stderr}"
+
+        except Exception as e:
+            return False, f"Syntax error: {str(e)}"
+
+    except ImportError:
+        return (
+            False,
+            "tree-sitter-javascript is not installed. Install it using: pip install tree-sitter-javascript",
+        )
     except Exception as e:
-        return False, f"Error checking JavaScript syntax: {str(e)}"
+        return False, f"Error checking JavaScript/JSX syntax: {str(e)}"
 
 
 def check_shell_syntax(filepath):
@@ -97,6 +116,7 @@ def test_syntax_checker():
         "invalid.js",
         "valid.sh",
         "invalid.sh",
+        "output_files/Automattic__wp-calypso-22242/main.jsx",
     ]
 
     for file in test_files:

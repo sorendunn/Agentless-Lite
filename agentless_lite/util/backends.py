@@ -1,13 +1,18 @@
+import base64
 import json
 import os
 import time
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from io import BytesIO
 
+import anthropic
 import openai
+import requests
+from PIL import Image
 
 from agentless_lite.util.logging import setup_logging
-from agentless_lite.util.repair import create_diff_from_response
+from agentless_lite.util.repair import create_diff_from_response, fake_git_repo
 
 STR_REPLACE_EDITOR_DESCRIPTION = """Custom editing tool for editing files
 * State is persistent across command calls and discussions with the user
@@ -75,10 +80,38 @@ DEEPSEEK_TOOLS = [
     }
 ]
 
+ANTHROPIC_TOOLS = [
+    {
+        "name": "str_replace_editor",
+        "description": STR_REPLACE_EDITOR_DESCRIPTION,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "Full path to file, e.g. `folder/file.py`.",
+                    "type": "string",
+                },
+                "old_str": {
+                    "description": "Required parameter containing the string in `path` to replace.",
+                    "type": "string",
+                },
+                "new_str": {
+                    "description": "Optional parameter containing the new string (if not given, no string will be added).",
+                    "type": "string",
+                },
+            },
+            "required": ["path", "old_str"],
+            "cache_control": {"type": "ephemeral"},
+        },
+    }
+]
+
 
 class CodeGenerator(ABC):
     @abstractmethod
-    def generate(self, instance, prompt, args, file_lock, output_file):
+    def generate(
+        self, instance, prompt, args, file_lock, output_file, image_assets=None
+    ):
         pass
 
     @abstractmethod
@@ -197,7 +230,9 @@ class BaseGenerator(CodeGenerator):
             with open(output_file, "w", encoding="utf-8") as outfile:
                 outfile.writelines(lines)
 
-    def generate_with_retries(self, instance, prompt, args, file_lock, output_file):
+    def generate_with_retries(
+        self, instance, prompt, args, file_lock, output_file, image_assets=None
+    ):
         # Create a thread-local copy of args
         local_args = deepcopy(args)
 
@@ -218,10 +253,30 @@ class BaseGenerator(CodeGenerator):
                     file_lock,
                     output_file,
                     defer_writing=True,
+                    image_assets=image_assets,
                 )
-                git_diff = create_diff_from_response(
-                    response, instance["file_contents"], instance["found_files"]
-                )
+
+                # Handle both string responses and tool use responses
+                git_diff = None
+                if isinstance(response, str):
+                    git_diff = create_diff_from_response(
+                        response, instance["file_contents"], instance["found_files"]
+                    )
+                elif isinstance(response, list):  # Tool use response
+                    # Apply edits directly from tool use commands
+                    new_contents = instance["file_contents"].copy()
+                    for path, old_str, new_str in response:
+                        file_idx = instance["found_files"].index(path)
+                        if file_idx >= 0:
+                            new_contents[file_idx] = new_contents[file_idx].replace(
+                                old_str, new_str
+                            )
+                    git_diff = fake_git_repo(
+                        "playground",
+                        instance["found_files"],
+                        instance["file_contents"],
+                        new_contents,
+                    )
 
                 if git_diff:
                     # Write both the generation output and the diff
@@ -248,7 +303,14 @@ class BaseGenerator(CodeGenerator):
 
 class OpenAIGenerator(BaseGenerator):
     def generate(
-        self, instance, prompt, args, file_lock, output_file, defer_writing=False
+        self,
+        instance,
+        prompt,
+        args,
+        file_lock,
+        output_file,
+        defer_writing=False,
+        image_assets=None,
     ):
         logs_dir = os.path.join(os.path.dirname(output_file), "logs")
         logger = setup_logging(instance["instance_id"], logs_dir)
@@ -305,6 +367,25 @@ class OpenAIGenerator(BaseGenerator):
                         "max_tokens": args.max_completion_tokens,
                         "logprobs": args.logprobs,
                     }
+
+                if image_assets:
+                    content = [{"type": "text", "text": prompt}]
+                    for idx, image in enumerate(image_assets):
+                        image_base64 = get_base64_from_url(image)
+                        image_data = {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": image_base64,
+                            },
+                        }
+                        if idx < 1:  # Only add cache_control for first two images
+                            image_data["source"]["cache_control"] = {
+                                "type": "ephemeral"
+                            }
+                        content.append(image_data)
+                    config["messages"] = [{"role": "user", "content": content}]
 
                 completion = request_chatgpt_engine(config, logger)
 
@@ -370,6 +451,23 @@ class OpenAIGenerator(BaseGenerator):
                     "logprobs": args.logprobs,
                 }
 
+            if image_assets:
+                for idx, image in enumerate(image_assets):
+                    image_base64 = get_base64_from_url(image)
+                    image_data = {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": image_base64,
+                        },
+                    }
+                    if idx < 2:  # Only add cache_control for first two images
+                        image_data["source"]["cache_control"] = {"type": "ephemeral"}
+                    content = [{"type": "text", "text": prompt}]
+                    content.append(image_data)
+                    config["messages"] = [{"role": "user", "content": content}]
+
             completion = request_chatgpt_engine(config, logger)
 
             if completion is None:
@@ -416,7 +514,14 @@ class OpenAIGenerator(BaseGenerator):
 
 class DeepSeekGenerator(BaseGenerator):
     def generate(
-        self, instance, prompt, args, file_lock, output_file, defer_writing=False
+        self,
+        instance,
+        prompt,
+        args,
+        file_lock,
+        output_file,
+        defer_writing=False,
+        image_assets=None,
     ):
         logs_dir = os.path.join(os.path.dirname(output_file), "logs")
         logger = setup_logging(instance["instance_id"], logs_dir)
@@ -465,6 +570,14 @@ class DeepSeekGenerator(BaseGenerator):
                         {"role": "user", "content": prompt},
                     ],
                 }
+
+            if image_assets:
+                logger.info(type(image_assets))
+                logger.info(image_assets)
+                content = [{"type": "text", "text": prompt}]
+                for image in image_assets:
+                    content.append({"type": "image_url", "image_url": {"url": image}})
+                config["messages"] = [{"role": "user", "content": content}]
 
             if args.tool_use:
                 config.update(
@@ -519,7 +632,14 @@ class DeepSeekGenerator(BaseGenerator):
 
 class OpenRouterGenerator(BaseGenerator):
     def generate(
-        self, instance, prompt, args, file_lock, output_file, defer_writing=False
+        self,
+        instance,
+        prompt,
+        args,
+        file_lock,
+        output_file,
+        defer_writing=False,
+        image_assets=None,
     ):
         logs_dir = os.path.join(os.path.dirname(output_file), "logs")
         logger = setup_logging(instance["instance_id"], logs_dir)
@@ -558,6 +678,15 @@ class OpenRouterGenerator(BaseGenerator):
                     {"role": "user", "content": prompt},
                 ],
             }
+
+            if image_assets:
+                for image in image_assets:
+                    content = [{"type": "text", "text": prompt}]
+                    for image in image_assets:
+                        content.append(
+                            {"type": "image_url", "image_url": {"url": image}}
+                        )
+                    config["messages"] = [{"role": "user", "content": content}]
 
             if args.tool_use:
                 config.update(
@@ -609,10 +738,195 @@ class OpenRouterGenerator(BaseGenerator):
         return all_responses[-1], output_entry
 
 
+def get_base64_from_url(image_url):
+    """Convert an image URL to base64 encoding"""
+    response = requests.get(image_url)
+    img = Image.open(BytesIO(response.content))
+
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    return img_str
+
+
+def request_anthropic_engine(config, logger, max_retries=40):
+    ret = None
+    retries = 0
+    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+    while ret is None and retries < max_retries:
+        try:
+            logger.info("Creating Anthropic API request")
+            ret = client.messages.create(**config)
+
+            if ret is None:
+                logger.error(f"Invalid response received: {ret}")
+                raise Exception("Invalid API response")
+
+        except anthropic.APIError as e:
+            if isinstance(e, anthropic.BadRequestError):
+                logger.error("Request invalid")
+                logger.error(str(e))
+                raise Exception("Invalid API Request")
+            elif isinstance(e, anthropic.RateLimitError):
+                logger.info("Rate limit exceeded. Waiting...")
+                logger.error(str(e))
+                time.sleep(5)
+            elif isinstance(e, anthropic.APIConnectionError):
+                logger.info("API connection error. Waiting...")
+                logger.error(str(e))
+                time.sleep(5)
+            else:
+                logger.info("Unknown error. Waiting...")
+                logger.error(str(e))
+                time.sleep(1)
+
+        retries += 1
+        if retries >= max_retries:
+            logger.error(f"Max retries ({max_retries}) exceeded")
+            ret = None
+
+    logger.info(f"API response {ret}")
+    return ret
+
+
+class AnthropicGenerator(BaseGenerator):
+    def generate(
+        self,
+        instance,
+        prompt,
+        args,
+        file_lock,
+        output_file,
+        defer_writing=False,
+        image_assets=None,
+    ):
+        logs_dir = os.path.join(os.path.dirname(output_file), "logs")
+        logger = setup_logging(instance["instance_id"], logs_dir)
+        logger.info("Initializing Anthropic client")
+
+        existing_entry = self.get_existing_entry(instance, file_lock, output_file)
+        all_responses = [] if not existing_entry else existing_entry["responses"]
+
+        all_usage = (
+            existing_entry["usage"]
+            if existing_entry
+            else {"completion_tokens": 0, "prompt_tokens": 0, "temp": []}
+        )
+
+        start_index = len(all_responses)
+        for i in range(start_index, args.max_retries):
+            temperature = (
+                self.get_temperature_for_generation(i, args.temp, args.max_retries)
+                if args.warming
+                else args.temp
+            )
+            logger.info(
+                f"Making API call {i+1}/{args.max_retries} with temperature {temperature}"
+            )
+
+            config = {
+                "model": args.model,
+                "max_tokens": args.max_completion_tokens,
+                "temperature": temperature,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt,
+                                "cache_control": {"type": "ephemeral"},
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            if args.model == "claude-3-7-sonnet-20250219":
+                config["temperature"] = 1
+                config["thinking"] = {
+                    "type": "enabled",
+                    "budget_tokens": args.max_completion_tokens - 4096,
+                }
+
+            if args.tool_use:
+                config["tools"] = ANTHROPIC_TOOLS
+
+            if image_assets:
+                content = config["messages"][0]["content"]
+                for image in image_assets:
+                    image_base64 = get_base64_from_url(image)
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": image_base64,
+                                # "cache_control": {"type": "ephemeral"}
+                            },
+                        }
+                    )
+
+            completion = request_anthropic_engine(config, logger)
+
+            if completion:
+                if args.tool_use:
+                    logger.info("Processing tool use response")
+                    logger.info(f"Raw completion: {completion}")
+                    logger.info(f"Content blocks: {completion.content}")
+
+                    # Extract tool use commands
+                    edits = []
+                    for block in completion.content:
+                        logger.info(f"Processing content block: {block}")
+                        logger.info(f"Block type: {block.type}")
+
+                        if block.type == "tool_use":
+                            params = block.input
+                            logger.info(f"Tool call parameters: {params}")
+                            edits.append(
+                                (
+                                    params["path"],
+                                    params["old_str"],
+                                    params.get("new_str", ""),
+                                )
+                            )
+                            logger.info(f"Added edit: {edits[-1]}")
+
+                    logger.info(f"Final collected edits: {edits}")
+                    response = edits
+                else:
+                    response = completion.content[0].text
+
+                all_responses.append(response)
+                if args.warming:
+                    all_usage["temp"].append(temperature)
+            else:
+                all_responses.append("" if not args.tool_use else [])
+
+            output_entry = {
+                "instance_id": instance["instance_id"],
+                "found_files": instance["found_files"],
+                "file_contents": instance["file_contents"],
+                "responses": all_responses,
+                "usage": all_usage,
+            }
+
+            if not defer_writing:
+                self.update_output_file(output_entry, instance, file_lock, output_file)
+
+        logger.info("Output written successfully")
+        return all_responses[-1], output_entry
+
+
 def get_generator(backend_type):
     generators = {
         "openai": OpenAIGenerator(),
         "deepseek": DeepSeekGenerator(),
         "open_router": OpenRouterGenerator(),
+        "anthropic": AnthropicGenerator(),
     }
     return generators.get(backend_type)

@@ -46,9 +46,65 @@ Please note that the *SEARCH/REPLACE* edit REQUIRES PROPER INDENTATION. If you w
 Wrap the *SEARCH/REPLACE* edit in blocks ```python...```.
 """
 
+AGENTLESS_PROMPT_MULTIMODAL = """
+We are currently solving the following issue within our repository. Here is the issue text:
+--- BEGIN ISSUE ---
+{problem_statement}
+--- END ISSUE ---
+
+Below are some code segments, each from a relevant file. One or more of these files may contain bugs:
+--- BEGIN FILE ---
+{retrieval}
+--- END FILE ---
+
+Please first localize the bug based on the issue statement, and then generate *SEARCH/REPLACE* edits to fix the issue.
+
+Every *SEARCH/REPLACE* edit must use this format:
+1. The file path
+2. The start of search block: <<<<<<< SEARCH
+3. A contiguous chunk of lines to search for in the existing source code
+4. The dividing line: =======
+5. The lines to replace into the source code
+6. The end of the replace block: >>>>>>> REPLACE
+
+Here is an example:
+
+```python
+### mathweb/flask/app.py
+<<<<<<< SEARCH
+from flask import Flask
+=======
+import math
+from flask import Flask
+>>>>>>> REPLACE
+```
+
+Please note that the *SEARCH/REPLACE* edit REQUIRES PROPER INDENTATION. If you would like to add the line '        print(x)', you must fully write that out, with all those spaces before the code!
+Wrap the *SEARCH/REPLACE* edit in blocks (e.g.) ```python...```.
+"""
+
+AGENTLESS_PROMPT_TOOL_USE = """
+We are currently solving the following issue within our repository. Here is the issue text:
+--- BEGIN ISSUE ---
+{problem_statement}
+--- END ISSUE ---
+
+Below are some code segments, each from a relevant file. One or more of these files may contain bugs:
+--- BEGIN FILE ---
+{retrieval}
+--- END FILE ---
+
+Please first localize the bug based on the issue statement, and then generate edits to fix the issue.
+"""
+
 
 def process_instance(instance, args, file_lock):
-    repair_prompt = AGENTLESS_PROMPT
+    if args.tool_use:
+        repair_prompt = AGENTLESS_PROMPT_TOOL_USE
+    elif args.multimodal:
+        repair_prompt = AGENTLESS_PROMPT_MULTIMODAL
+    else:
+        repair_prompt = AGENTLESS_PROMPT
 
     formatted_files = ""
     for idx, file in enumerate(instance["found_files"]):
@@ -79,7 +135,12 @@ def process_instance(instance, args, file_lock):
         raise ValueError(f"Unsupported backend: {args.backend}")
 
     git_diff = generator.generate_with_retries(
-        instance, prompt, args, file_lock, args.output_file
+        instance,
+        prompt,
+        args,
+        file_lock,
+        args.output_file,
+        instance.get("image_assets", None),
     )
     if not git_diff:
         print(
@@ -189,6 +250,11 @@ def parse_arguments():
         type=str,
         default="outputs",
         help="Folder to save the output files",
+    )
+    parser.add_argument(
+        "--multimodal",
+        action="store_true",
+        help="Use multimodal prompt",
     )
     return parser.parse_args()
 

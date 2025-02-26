@@ -50,6 +50,15 @@ def retrieve_instance(args, row, output_path, repo_locks, output_lock):
                     for file_path in files
                     if file_path.endswith(".py") and (not "/test" in file_path)
                 ]
+            if args.filter_multimodal:
+                files = [
+                    file_path
+                    for file_path in files
+                    if file_path.endswith(
+                        (".js", ".jsx", ".scss", ".frag", ".ts", ".mdx", ".json")
+                    )
+                    and (not "/test" in file_path)
+                ]
 
             logger.info(f"Found {len(files)} relevant files")
 
@@ -78,6 +87,15 @@ def retrieve_instance(args, row, output_path, repo_locks, output_lock):
             filter_model_name=args.filter_model,
         )
 
+        # Test more aggressive filtering
+        # Filter both file names and contents together
+        filtered = [
+            (name, content)
+            for name, content in zip(file_names, file_contents)
+            if name.endswith((".js", ".jsx"))
+        ]
+        file_names, file_contents = zip(*filtered) if filtered else ([], [])
+
         logger.info(f"Retrieved {len(file_names)} files")
 
         result = {
@@ -86,6 +104,11 @@ def retrieve_instance(args, row, output_path, repo_locks, output_lock):
             "found_files": file_names,
             "file_contents": file_contents,
         }
+
+        if "image_assets" in row:
+            result["image_assets"] = json.loads(row["image_assets"])[
+                "problem_statement"
+            ]
 
         with output_lock:
             with open(output_path, "a") as f:
@@ -112,7 +135,7 @@ def retrieve_swe(args):
         }
 
         print(f"Loading dataset from {args.dataset}")
-        swe_df = pd.read_parquet(f"hf://datasets/{args.dataset}/" + splits["test"])
+        swe_df = pd.read_parquet(f"hf://datasets/{args.dataset}/" + splits[args.split])
         print(f"Loaded {len(swe_df)} instances")
 
         repo_locks = {repo: threading.Lock() for repo in swe_df["repo"].unique()}
@@ -211,6 +234,7 @@ def parse_arguments():
         help="Output file name for the results",
     )
     parser.add_argument("--dataset", type=str, default="princeton-nlp/SWE-bench_Lite")
+    parser.add_argument("--split", type=str, default="test")
     parser.add_argument(
         "--filter_model",
         type=str,
@@ -231,6 +255,11 @@ def parse_arguments():
     )
     parser.add_argument(
         "--filter_python", action="store_true", help="Filter out non-python files"
+    )
+    parser.add_argument(
+        "--filter_multimodal",
+        action="store_true",
+        help="Filter out files for multimodal SWE-bench",
     )
 
     return parser.parse_args()
