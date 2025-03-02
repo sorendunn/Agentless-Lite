@@ -9,3 +9,6 @@ llama-index-embeddings-voyageai
 gitpython
 pandas
 weave
+anthropic
+tree_sitter_javascript
+tree_sitter
