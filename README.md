@@ -43,7 +43,7 @@ Thats it! While simple this approach is competitive with SOTA agents and comes w
 - 🐍 No python specific language dependencies
 - ⚡ Simple, single-prompt inference
 - 🤝 Support for over 300 models with *OpenRouter*
-- 💰 Costs less than $0.25 per instance
+- 💰 Costs less than $0.33 per instance
 
 ## ⚙️ Setup
 
