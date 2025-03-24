@@ -22,8 +22,8 @@
 
 ## 📢 News
 
-- *Febuary 26th, 2025*: Agentless-Lite more than **doubles SOTA** on SWE-bench Multimodal from 12.19% to 25.34% (6x the performance of Agentless) for a fourth of the cost without even requiring a runtime environment!
-- *Febuary 13th, 2025*: We just released Agentless-Lite 1.0! Agentless-Lite is the top-performing **RAG-only** scaffold for SWE-bench, increasing RAG performance on the lite subset from 4.33% to 32.33% and costing only $0.21 per instance ($0.12 if using the prepared retrieval contexts)!
+- *Febuary 26th, 2025*: Agentless Lite more than **doubles SOTA** on SWE-bench Multimodal from 12.19% to 25.34% (6x the performance of Agentless) for a fourth of the cost without even requiring a runtime environment!
+- *Febuary 13th, 2025*: We just released Agentless Lite 1.0! Agentless-Lite is the top-performing **RAG-only** scaffold for SWE-bench, increasing RAG performance on the lite subset from 4.33% to 32.33% and costing only $0.21 per instance ($0.12 if using the prepared retrieval contexts)!
 
 ## 💡 About
 
