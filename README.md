@@ -16,6 +16,10 @@
     <big><a href="#-acknowledgement">😻Acknowledgement</a></big>
 </p>
 
+<p align="center">
+    <img src="resources/multimodal_scores.png" alt="Multimodal Scores" width="600"/>
+</p>
+
 ## 📢 News
 
 - *Febuary 26th, 2025*: Agentless-Lite more than **doubles SOTA** on SWE-bench Multimodal from 12.19% to 25.34% (6x the performance of Agentless) for a fourth of the cost without even requiring a runtime environment!
