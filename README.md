@@ -47,7 +47,7 @@ Thats it! While simple this approach is competitive with SOTA agents and comes w
 
 ## ⚙️ Setup
 
-First create the environment
+First create the environment:
 
 ```shell
 git clone https://github.com/sorendunn/Agentless-Lite.git
