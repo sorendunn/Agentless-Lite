@@ -131,13 +131,15 @@ This will split files in the repositories into small chunks for embedding. `--fi
 
 ## 🐈‍⬛ Artifacts
 
-You can download the complete artifacts of **Agentless Lite** in our [v0.1.0 release](https://github.com/sorendunn/Agentless-Lite/releases/tag/v0.1.0):
+You can download the complete artifacts of **Agentless Lite** in our [v0.2.0 release](https://github.com/sorendunn/Agentless-Lite/releases/tag/v0.2.0):
 
 - 🐈‍⬛ **source_code.zip**: source code for Agentless Lite
 - 🐈‍⬛ **agentless_lite_retrievals.zip**: top retreived files for filtering + Voyage-Code-3 on SWE-bench Lite
 - 🐈‍⬛ **agentless_verified_retrievals.zip**: top retreived files for filtering + Voyage-Code-3 on SWE-bench Verified
+- 🐈‍⬛ **agentless_multimodal_retrievals.zip**: top retreived files for filtering + Voyage-Code-3 on SWE-bench Multimodal
 - 🐈‍⬛ **agentless_lite_run.zip**: complete Agentless Lite run on SWE-bench Lite for o3-mini
-- 🐈‍⬛ **agentless_lite_run_verified.zip**: complete Agentless Lite run on SWE-bench Verified for o3-mini
+- 🐈‍⬛ **agentless_verified_run.zip**: complete Agentless Lite run on SWE-bench Verified for o3-mini
+- 🐈‍⬛ **agentless_multimodal_run.zip**: complete Agentless Lite run on SWE-bench Multimodal for Claude 3.5 Sonnet
 
 ## 😻 Acknowledgement
 
